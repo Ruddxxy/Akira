@@ -47,7 +47,13 @@ jobs:
               EXT=""
               if [ "$GOOS" = "windows" ]; then EXT=".exe"; fi
               TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-              BIN_NAME="akira-${GOOS}-${GOARCH}-${TIMESTAMP}${EXT}"
+              if [ "$GOOS" = "linux" ]; then
+                BIN_NAME="akira-linux-amd64-${TIMESTAMP}"
+              elif [ "$GOOS" = "darwin" ]; then
+                BIN_NAME="akira-darwin-amd64-${TIMESTAMP}"
+              else
+                BIN_NAME="akira-${GOOS}-${GOARCH}-${TIMESTAMP}${EXT}"
+              fi
               echo "Building $BIN_NAME"
               GOOS=$GOOS GOARCH=$GOARCH go build -ldflags="-X 'main.Version=${{ env.VERSION }}'" -o dist/$BIN_NAME ./cmd/akira
             done
