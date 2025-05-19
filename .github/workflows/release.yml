@@ -46,7 +46,8 @@ jobs:
             for GOARCH in amd64; do
               EXT=""
               if [ "$GOOS" = "windows" ]; then EXT=".exe"; fi
-              BIN_NAME="akira-${GOOS}-${GOARCH}${EXT}"
+              TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+              BIN_NAME="akira-${GOOS}-${GOARCH}-${TIMESTAMP}${EXT}"
               echo "Building $BIN_NAME"
               GOOS=$GOOS GOARCH=$GOARCH go build -ldflags="-X 'main.Version=${{ env.VERSION }}'" -o dist/$BIN_NAME ./cmd/akira
             done
