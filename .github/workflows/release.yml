@@ -30,6 +30,8 @@ jobs:
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
       - name: Build Binaries
+        env:
+          VERSION: ${{ github.ref_name }}
         run: |
           mkdir -p dist
           for GOOS in linux windows darwin; do
@@ -46,6 +48,13 @@ jobs:
         run: |
           cd dist
           sha256sum * > checksums.txt
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist
+          path: dist/
+          retention-days: 5
 
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v1
