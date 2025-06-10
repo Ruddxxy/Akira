@@ -1,22 +1,33 @@
 package history
 
 import (
+	"bufio"
 	"os"
 	"os/user"
 	"path/filepath"
-	"strings"
 )
 
-func LoadHistory() []string {
+func LoadHistory() ([]string, error) {
 	user, err := user.Current()
 	if err != nil {
-		return []string{}
+		return nil, err
 	}
+
 	historyFile := filepath.Join(user.HomeDir, ".bash_history")
-	data, err := os.ReadFile(historyFile)
+	file, err := os.Open(historyFile)
 	if err != nil {
-		return []string{}
+		return nil, err
 	}
-	lines := strings.Split(string(data), "\n")
-	return lines
+	defer file.Close()
+
+	var lines []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return lines, nil
 }

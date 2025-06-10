@@ -1,9 +1,9 @@
 #compdef akira
 
 _akira_complete() {
-    local suggestions
-    suggestions=("${(@f)$(akira suggest $BUFFER)}")
-    compadd -- $suggestions
+    local -a suggestions
+    suggestions=("${(@f)$(akira suggest "$BUFFER")}")
+    _describe 'completion' suggestions
 }
 
 compdef _akira_complete akira

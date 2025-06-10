@@ -19,8 +19,15 @@ func main() {
 
 	switch args[0] {
 	case "suggest":
-		all := commands.DiscoverPathCommands()
-		historyItems := history.LoadHistory()
+		all, err := commands.DiscoverPathCommands()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error discovering commands: %v\n", err)
+			os.Exit(1)
+		}
+		historyItems, histErr := history.LoadHistory()
+		if histErr != nil {
+			fmt.Fprintf(os.Stderr, "Warning: could not load history: %v\n", histErr)
+		}
 		all = append(all, historyItems...)
 		for _, cmd := range all {
 			fmt.Println(cmd)

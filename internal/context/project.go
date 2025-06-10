@@ -6,5 +6,11 @@ import (
 
 func InGitProject() bool {
 	_, err := os.Stat(".git")
-	return err == nil
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+		return false
+	}
+	return true
 }
