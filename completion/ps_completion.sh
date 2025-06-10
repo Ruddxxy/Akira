@@ -2,7 +2,10 @@
 
 _complete_cli_tool() {
     local word="${COMP_WORDS[COMP_CWORD]}"
-    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local prev=""
+    if [[ $COMP_CWORD -gt 0 ]]; then
+        prev="${COMP_WORDS[COMP_CWORD-1]}"
+    fi
 
     if [[ "$prev" == "cli_tool" ]]; then
         COMPREPLY=( $(compgen -W "command1 command2 command3" -- "$word") )

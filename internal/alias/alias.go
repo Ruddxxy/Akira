@@ -31,6 +31,11 @@ func LoadUserAliases(path string) error {
 	aliasesMutex.Lock()
 	defer aliasesMutex.Unlock()
 	for k, v := range userAliases {
+		if _, exists := Aliases[k]; exists {
+			// Log a warning about overwriting an existing alias
+			// You can replace this with a logger if desired
+			os.Stderr.WriteString("Warning: overwriting existing alias '" + k + "'\n")
+		}
 		Aliases[k] = v
 	}
 	return nil

@@ -7,19 +7,19 @@ import (
 	"strings"
 )
 
-func DiscoverPathCommands() ([]string, error) {
+func DiscoverPathCommands() ([]string, []error) {
 	pathEnv := os.Getenv("PATH")
 	paths := strings.Split(pathEnv, string(os.PathListSeparator))
 	cmds := make(map[string]struct{})
 
 	var lastErr error
 	readableDirFound := false
+	dirErrors := make([]error, 0)
 
 	for _, dir := range paths {
 		files, err := os.ReadDir(dir)
 		if err != nil {
-			// Log the error but continue to the next directory
-			fmt.Fprintf(os.Stderr, "Error reading directory %s: %v\n", dir, err)
+			dirErrors = append(dirErrors, fmt.Errorf("error reading directory %s: %w", dir, err))
 			lastErr = err
 			continue
 		}
@@ -29,8 +29,7 @@ func DiscoverPathCommands() ([]string, error) {
 				full := filepath.Join(dir, file.Name())
 				info, err := os.Stat(full)
 				if err != nil {
-					// Log the error but continue to the next file
-					fmt.Fprintf(os.Stderr, "Error getting file info for %s: %v\n", full, err)
+					dirErrors = append(dirErrors, fmt.Errorf("error getting file info for %s: %w", full, err))
 					continue
 				}
 				if info.Mode()&0111 != 0 {
@@ -44,9 +43,9 @@ func DiscoverPathCommands() ([]string, error) {
 		list = append(list, k)
 	}
 	if !readableDirFound && lastErr != nil {
-		return list, fmt.Errorf("failed to read any PATH directories: last error: %w", lastErr)
+		dirErrors = append(dirErrors, fmt.Errorf("failed to read any PATH directories: last error: %w", lastErr))
 	}
-	return list, nil
+	return list, dirErrors
 }
 
 func InstallCompletionScript(shell string) error {

@@ -19,10 +19,9 @@ func main() {
 
 	switch args[0] {
 	case "suggest":
-		all, err := commands.DiscoverPathCommands()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error discovering commands: %v\n", err)
-			os.Exit(1)
+		all, errs := commands.DiscoverPathCommands()
+		for _, err := range errs {
+			fmt.Fprintf(os.Stderr, "%v\n", err)
 		}
 		historyItems, histErr := history.LoadHistory()
 		if histErr != nil {
@@ -37,7 +36,11 @@ func main() {
 			fmt.Println("Specify shell: bash, zsh, powershell")
 			return
 		}
-		commands.InstallCompletionScript(args[1])
+		err := commands.InstallCompletionScript(args[1])
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error installing completion script: %v\n", err)
+			os.Exit(1)
+		}
 	case "register-plugin":
 		if len(args) < 3 {
 			fmt.Println("Usage: akira register-plugin [name] [script_path]")
