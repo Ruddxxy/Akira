@@ -86,7 +86,6 @@ jobs:
             Verify the integrity of the downloaded files using the provided checksums.
           files: |
             dist/*
-            dist/checksums.txt
           draft: false
           prerelease: false
         env:
