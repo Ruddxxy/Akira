@@ -27,3 +27,12 @@ go.work
 # OS specific files
 .DS_Store
 Thumbs.db 
+
+*.log
+# Temporary files
+*.tmp
+# Backup files
+*.bak
+
+.DS_Store
+Thumbs.db
