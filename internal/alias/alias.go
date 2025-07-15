@@ -3,81 +3,140 @@ package alias
 import (
 	"encoding/json"
 	"os"
-	"strings"
+	"path/filepath"
 	"sync"
 )
 
-var Aliases = map[string]string{
-	"gcm": "git commit -m",
-	"gst": "git status",
+var (
+	userAliases = make(map[string]map[string]string)
+	aliases     = map[string]map[string]string{}
+	mutex       sync.RWMutex
+)
+
+// Aliases holds the default aliases.
+func LoadUserAliases(home string) error {
+	path := filepath.Join(home, ".akira_aliases.json")
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		//file does not exist, create it with default values
+		defaults := map[string]map[string]string{
+			"gh": {
+				"status":   "git status",
+				"commit":   "git commit -m",
+				"push":     "git push",
+				"pull":     "git pull",
+				"clone":    "git clone",
+				"branch":   "git branch",
+				"checkout": "git checkout",
+				"merge":    "git merge",
+				"rebase":   "git rebase",
+				"reset":    "git reset",
+				"log":      "git log",
+				"diff":     "git diff",
+				"stash":    "git stash",
+				"tag":      "git tag",
+				"remote":   "git remote"},
+			"dc": {
+				"build":   "docker build",
+				"run":     "docker run ",
+				"compose": "docker-compose",
+				"ps":      "docker ps",
+				"logs":    "docker logs",
+				"exec":    "docker exec -it",
+				"images":  "docker images",
+				"rmi":     "docker rmi",
+				"rm":      "docker rm",
+				"network": "docker network",
+				"volume":  "docker volume",
+			},
+			"os": {
+				"ls":    "ls -la",
+				"cd":    "cd",
+				"mkdir": "mkdir",
+				"rm":    "rm -rf",
+				"echo":  "echo",
+				"cat":   "cat",
+				"touch": "touch",
+				"cp":    "cp -r",
+				"mv":    "mv",
+				"pwd":   "pwd"},
+			"py": {
+				"run":        "python",
+				"install":    "pip install",
+				"freeze":     "pip freeze",
+				"venv":       "python -m venv",
+				"activate":   "source venv/bin/activate",
+				"deactivate": "deactivate",
+				"test":       "python -m unittest",
+			},
+			"js": {
+				"run":              "node",
+				"install":          "npm install",
+				"start":            "npm start",
+				"test":             "npm test",
+				"build":            "npm run build",
+				"init":             "npm init -y",
+				"serve":            "npx serve",
+				"create-react-app": "npx create-react-app",
+			},
+		}
+		file, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+
+		defer file.Close()
+		encoder := json.NewEncoder(file)
+		encoder.SetIndent("", "  ")
+		if err := encoder.Encode(defaults); err != nil {
+			return err
+		}
+	}
+	//Load the aliases from the file
+	return loadfromFile(path)
 }
-
-// LoadUserAliases loads aliases from a JSON file and merges them.
-
-var aliasesMutex sync.RWMutex
-
-func LoadUserAliases(path string) error {
+func loadfromFile(path string) error {
 	file, err := os.Open(path)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-
-	userAliases := make(map[string]string)
+	var userAliases = make(map[string]map[string]string)
 	if err := json.NewDecoder(file).Decode(&userAliases); err != nil {
 		return err
 	}
+	mutex.Lock()
 
-	aliasesMutex.Lock()
-	defer aliasesMutex.Unlock()
-	for k, v := range userAliases {
-		if _, exists := Aliases[k]; exists {
-			// Log a warning about overwriting an existing alias
-			// You can replace this with a logger if desired
-			os.Stderr.WriteString("Warning: overwriting existing alias '" + k + "'\n")
-		}
-		Aliases[k] = v
-	}
+	defer mutex.Unlock()
+	aliases = userAliases
 	return nil
 }
-
-func Resolve(alias string) string {
-	aliasesMutex.RLock()
-	defer aliasesMutex.RUnlock()
-	if val, ok := Aliases[alias]; ok {
-		return val
+func GetAliases() map[string]map[string]string {
+	mutex.RLock()
+	defer mutex.RUnlock()
+	return aliases
+}
+func SaveAliases(home string) error {
+	path := filepath.Join(home, ".akira_aliases.json")
+	mutex.RLock()
+	defer mutex.RUnlock()
+	file, err := os.Create(path)
+	if err != nil {
+		return err
 	}
-	return alias
+	defer file.Close()
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(userAliases)
 }
 
-// ExpandAlias recursively expands an alias until it is fully resolved.
-func ExpandAlias(command string) string {
-	return expandAliasWithDepth(command, make(map[string]bool), 0)
-}
-
-func expandAliasWithDepth(command string, visited map[string]bool, depth int) string {
-	const maxDepth = 10
-	if depth > maxDepth {
-		return command // Prevent deep recursion
+// Resolve returns the resolved alias or the original command if not found.
+func Resolve(group, key string) (string, bool) {
+	mutex.RLock()
+	defer mutex.RUnlock()
+	if cmds, ok := aliases[group]; ok {
+		if cmd, ok := cmds[key]; ok {
+			return cmd, true
+		}
 	}
-
-	parts := strings.SplitN(command, " ", 2)
-	alias := parts[0]
-
-	if visited[alias] {
-		return command // Circular reference detected
-	}
-
-	args := ""
-	if len(parts) > 1 {
-		args = " " + parts[1]
-	}
-
-	resolved := Resolve(alias)
-	if resolved == alias {
-		return command
-	}
-
-	visited[alias] = true
-	return expandAliasWithDepth(resolved+args, visited, depth+1)
+	return "", false
 }

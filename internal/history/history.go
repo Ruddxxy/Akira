@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 )
 
-func LoadHistory() ([]string, error) {
+func LoadHistory(maxEntries int) ([]string, error) {
 	user, err := user.Current()
 	if err != nil {
 		return nil, err
@@ -25,9 +25,9 @@ func LoadHistory() ([]string, error) {
 	for scanner.Scan() {
 		lines = append(lines, scanner.Text())
 	}
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
+	if len(lines) > maxEntries {
+		lines = lines[len(lines)-maxEntries:] // Keep only the last maxEntries
 
-	return lines, nil
+	}
+	return lines, scanner.Err()
 }
