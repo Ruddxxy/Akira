@@ -1,69 +1,146 @@
-# Akira CLI Tool
+## 🚀 Akira - Intelligent CLI & GUI Tool
 
-Akira is a powerful, context-aware CLI autocompletion tool designed to enhance your Bash and Zsh terminal experience by providing smart command, option, and file path suggestions. It improves productivity by learning from your command history, aliases, and dynamically discovered commands, while filtering out private/internal commands.
-
----
-
-## Features
-
-- **Context-aware suggestions**: Understands the current input context to provide relevant completions.
-- **Alias expansion**: Supports user-defined command aliases for faster typing.
-- **History-based suggestions**: Leverages your command history for personalized autocomplete.
-- **Private command filtering**: Hides internal or private commands (e.g., commands starting with `_`).
-- **Shell compatibility**: Supports Bash and Zsh out of the box with easy-to-use completion scripts.
-- **Lightweight & fast**: Written in Go for optimal performance.
+Akira is a modular CLI & GUI tool to help beginners and power users manage command-line aliases, auto-complete suggestions, and plugins. It’s designed to make working with Git, Docker, Linux, Node, Python and more super easy — right from your terminal or with a friendly GUI.
 
 ---
 
-## Prerequisites
+### ✨ Features
 
-- [Go](https://golang.org/dl/) 1.16+ (to build from source)
-- Bash or Zsh shell on Linux/macOS or Windows Subsystem for Linux (WSL)
-- (Optional) Windows users can test in Linux environments such as Kali Linux or WSL
+✅ Nested JSON alias groups (`gh`, `dc`, `os`, `py`, `np`)
+✅ Auto-creates `~/.akira_aliases.json` with smart defaults on first run
+✅ CLI commands for suggestions & alias resolution
+✅ Fyne GUI to view, add, and search aliases interactively
+✅ Shell completions for Bash, Zsh, and PowerShell
+✅ Modular Go project structure with internal packages
 
 ---
 
-## Installation
+### 📂 Project structure
 
-### Build from source
+```
+akira/
+├── cmd/akira/main.go         # CLI entry
+├── internal/
+│   ├── alias/                # Nested alias loader, saver, resolver
+│   ├── filecomplete/         # Suggestion builder
+│   ├── plugins/              # Plugin loader
+│   ├── discover/             # Path discovery
+│   └── gui/                  # Fyne GUI
+├── scripts/
+│   ├── akira_completion.sh
+│   ├── akira_completion.zsh
+│   └── akira_completion.ps1
+├── go.mod
+├── go.sum
+└── README.md
+```
 
-Clone the repository and build the executable:
+---
+
+### 🚀 Getting started
+
+#### 🔧 Build
+
+**Linux / Mac:**
 
 ```bash
-git clone https://github.com/yourusername/akira.git
-cd akira
-go mod tidy
 go build -o akira ./cmd/akira
 ```
 
----
+**Windows:**
 
-## Usage
-
-After building, you can run Akira with:
-
-```bash
-./akira [command] [flags]
+```powershell
+go build -ldflags "-H windows" -o akira.exe ./cmd/akira
 ```
 
-To enable shell completion, source the provided scripts:
+**Install globally:**
 
 ```bash
-# For Bash
-source completion/akira_completion.sh
-
-# For Zsh
-source completion/akira_completion.zsh
+go install ./cmd/akira
 ```
 
 ---
 
-## License
+### ⚙️ Usage
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+#### 🚀 CLI commands
+
+```bash
+akira suggest gh
+# gh status -> git status
+# gh commit -> git commit
+
+akira run-alias gh status
+# Resolved to: git status
+```
+
+#### 🎨 GUI
+
+```bash
+akira gui
+```
+
+* View all aliases by group
+* Add new aliases visually
+* Try out live suggestions
 
 ---
 
-## Author
+### 🐚 Shell completions
 
-Made by RUDRA MOHAPATRO
+**Bash:**
+
+```bash
+source scripts/akira_completion.sh
+```
+
+**Zsh:**
+
+```bash
+source scripts/akira_completion.zsh
+```
+
+**PowerShell:**
+
+```powershell
+. scripts/akira_completion.ps1
+```
+
+✅ Now `akira [TAB]` completes your commands.
+
+---
+
+### 🚀 Testing checklist
+
+| Test Case              | Command                     | Expected Result                  |
+| ---------------------- | --------------------------- | -------------------------------- |
+| JSON auto-creation     | `akira suggest`             | Creates `~/.akira_aliases.json`  |
+| Suggest nested group   | `akira suggest gh`          | Lists only git commands          |
+| Run alias resolution   | `akira run-alias gh status` | Prints `Resolved to: git status` |
+| GUI launches           | `akira gui`                 | Opens Fyne window                |
+| Shell completions work | `akira [TAB]`               | Shows completions                |
+
+---
+
+### 💾 Data files
+
+* User aliases are stored in:
+
+| OS        | File                                 |
+| --------- | ------------------------------------ |
+| Linux/Mac | `~/.akira_aliases.json`              |
+| Windows   | `C:\Users\<You>\.akira_aliases.json` |
+
+Created with defaults on first run.
+
+---
+
+### ❤️ Contributing
+
+PRs and feature suggestions are welcome!
+
+---
+
+### 📝 License
+
+MIT
